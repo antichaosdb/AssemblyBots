@@ -5,7 +5,7 @@
   "title": "Assembly Bots",
   "author": "Antichaos",
   "contact": "",
-  "homepage": "https://",
+  "homepage": "https://github.com/antichaos/assemblybots",
   "description": "Assembly machines needs a bot for each craft.  The bots can't be crafted themselves, but they do occasionally replicate.",
   "dependencies": [
 	"base >= 0.14.0"

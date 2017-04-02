@@ -7,7 +7,7 @@ data:extend(
     flags = {"goes-to-main-inventory"},
     subgroup = "production-machine",
     order = "d[assembly-bot]",
-    stack_size = 100
+    stack_size = 10
   },
   {
     type = "item",
@@ -16,6 +16,6 @@ data:extend(
     flags = {"goes-to-main-inventory"},
     subgroup = "production-machine",
     order = "d[assembly-bot]-a[assembling-bot-used]",
-    stack_size = 100
+    stack_size = 10
   }
 })

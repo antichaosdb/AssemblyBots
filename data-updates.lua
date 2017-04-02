@@ -6,7 +6,7 @@ data.raw["assembling-machine"]["chemical-plant"].ingredient_count = 5
 
 -- Add Assembly bots as inout and output to all recipies (except smelting)
 for k, recipe in pairs(data.raw.recipe) do
-if recipe.category ~= "smelting" and recipe.name ~= "assembly-bot" and recipe.name ~= "used-assembly-bot" then
+if recipe.category ~= "smelting" and not string.match(recipe.name,"assembly-bot") then
 	if not recipe.name then 
 		recipe.name = recipe[1]
 		recipe.amount = recipe[2]

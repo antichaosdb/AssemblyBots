@@ -1,7 +1,7 @@
 ---TODO
-- try to prevent bots in entities being destroyed when the entity is blown up
 - research to unlock recipe variations using more bots for more/faster output
 
 ---0.0.1
 - First release
-- all non-smelting recipies require assembly bots
+- All non-smelting recipies require assembly bots
+- Assembly bots in entities that get destroyed are spilled onto the ground

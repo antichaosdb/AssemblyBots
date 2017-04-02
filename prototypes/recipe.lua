@@ -9,14 +9,26 @@ data:extend({
     },
     result = "assembly-bot"
   },
-  {
+  -- {
+    -- type = "recipe",
+    -- name = "used-assembly-bot",
+    -- enabled = "true",
+    -- ingredients = 
+    -- {
+      -- {"assembly-bot",1}
+    -- },
+    -- result = "used-assembly-bot"
+  -- },
+   {
     type = "recipe",
-    name = "used-assembly-bot",
-    enabled = "true",
+    name = "assemblybot-recharge1",
+    enabled = "false",
     ingredients = 
     {
-      {"assembly-bot",1}
+      {"used-assembly-bot",3},
+	  {"iron-plate",1}
     },
-    result = "used-assembly-bot"
+    result = "assembly-bot",
+	result_count = 3
   }
 })
