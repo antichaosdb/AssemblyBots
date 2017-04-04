@@ -12,7 +12,16 @@ data:extend(
   {
     type = "item",
     name = "used-assembly-bot",
-    icon = "__assemblybots__/graphics/icons/assembly-bot-used.png",
+    icon = "__assemblybots__/graphics/icons/used-assembly-bot.png",
+    flags = {"goes-to-main-inventory"},
+    subgroup = "production-machine",
+    order = "d[assembly-bot]-a[assembling-bot-used]",
+    stack_size = 10
+  },
+  {
+    type = "item",
+    name = "broken-assembly-bot",
+    icon = "__assemblybots__/graphics/icons/broken-assembly-bot.png",
     flags = {"goes-to-main-inventory"},
     subgroup = "production-machine",
     order = "d[assembly-bot]-a[assembling-bot-used]",
