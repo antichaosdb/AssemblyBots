@@ -1,7 +1,12 @@
 ---TODO
-- research to unlock recipe variations using more bots for more/faster output
+- Custom graphics for chest spawns
+
+--- KNOWN ISSUES
+- Doesn't work with other large, recipe changing mods eg, Bobs/Angels.  
 
 ---0.0.1
 - First release
 - All non-smelting recipies require assembly bots
 - Assembly bots in entities that get destroyed are spilled onto the ground
+- Choice of mode and recharge techs that are mutually exclusive.  Each switch is more expensive
+- Bots replicate in storage

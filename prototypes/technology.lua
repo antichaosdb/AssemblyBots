@@ -2,12 +2,13 @@ data:extend(
 {
   {
     type = "technology",
-    name = "assemblybots-bot-recharge1",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
-	researched = true,
+    name = "assemblybots-bot-recharge1-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-recharge1.png",
+	icon_size = 128,
+	enabled = false,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     effects =
     {
@@ -18,10 +19,11 @@ data:extend(
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -29,11 +31,12 @@ data:extend(
   },
     {
     type = "technology",
-    name = "assemblybots-bot-recharge2",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
+    name = "assemblybots-bot-recharge2-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-recharge2.png",
+	icon_size = 128,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     effects =
     {
@@ -44,10 +47,11 @@ data:extend(
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -55,11 +59,12 @@ data:extend(
   },
     {
     type = "technology",
-    name = "assemblybots-bot-recharge3",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
+    name = "assemblybots-bot-recharge3-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-recharge3.png",
+	icon_size = 128,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     effects =
     {
@@ -70,10 +75,11 @@ data:extend(
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -81,37 +87,37 @@ data:extend(
   },
     {
     type = "technology",
-    name = "assemblybots-bot-production",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
+    name = "assemblybots-bot-production-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-production.png",
+	icon_size = 128,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
-    order = "e-c-d-a"
+    order = "e-c-d-d"
   },
     {
     type = "technology",
-    name = "assemblybots-bot-replication",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
-    prerequisites =
-    {
-      "automation"
-    },
-    unit =
-    {
-      count = 5,
+    name = "assemblybots-bot-replication-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-replication.png",
+	icon_size = 128,
+    prerequisites = {"electronics" },
+    unit = {
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -119,18 +125,20 @@ data:extend(
   },
 {
     type = "technology",
-    name = "assemblybots-bot-overdrive",
-    icon = "__assemblybots__/graphics/icons/assembly-bot.png",
+    name = "assemblybots-bot-overdrive-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-overdrive.png",
+	icon_size = 128,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -138,23 +146,75 @@ data:extend(
   },
  {
     type = "technology",
-    name = "assemblybots-bot-normal",
+    name = "assemblybots-bot-normal-1",
     icon = "__assemblybots__/graphics/icons/assembly-bot.png",
+	icon_size = 128,
 	enabled = false,
     prerequisites =
     {
-      "automation"
+      "electronics"
     },
     unit =
     {
-      count = 5,
+      count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1}
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
       },
       time = assemblybots.config.techtime
     },
     order = "e-c-d-a"
+  },
+   {
+    type = "technology",
+    name = "assemblybots-bot-suppression-1",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-suppression.png",
+	icon_size = 128,
+    prerequisites =
+    {
+      "electronics"
+    },
+    unit =
+    {
+      count = 50,
+      ingredients = 
+      {
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
+      },
+      time = assemblybots.config.techtime
+    },
+    order = "e-c-d-a"
+  },
+  {
+    type = "technology",
+    name = "assemblybots-bot-repair",
+    icon = "__assemblybots__/graphics/icons/broken-assembly-bot.png",
+	icon_size = 128,
+	researched = true,
+    prerequisites =
+    {
+      "advanced-electronics"
+    },
+    effects =
+    {
+      {
+        type = "unlock-recipe",
+        recipe = "assembly-bot-repair"
+      },
+    },
+    unit =
+    {
+      count = 50,
+      ingredients = 
+      {
+        {"science-pack-1", 1},
+		{"science-pack-2", 1}
+      },
+      time = assemblybots.config.techtime
+    },
+    order = "e-c-c-d"
   },
 }
 )
