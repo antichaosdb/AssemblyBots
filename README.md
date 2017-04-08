@@ -11,7 +11,8 @@ To succeed at this you'll have to learn to love filter inserters.  I know settin
 Current version
 ---------------
 0.1  Released 8 April 2017  
-Mod Portal Link  
+[Mod Portal Link](https://mods.factorio.com/mods/antichaos/assemblybots)  
+[Forum Thread](https://forums.factorio.com/viewtopic.php?f=97&t=43933)
 For contributions and bugs use https://github.com/antichaosdb/AssemblyBots
 
 SPOILERS!
