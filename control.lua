@@ -42,6 +42,7 @@ function assemblybots.init(force)
 	config.bots_spilled = config.bots_spilled or 0
 	config.spill_warning_level = config.spill_warning_level or 0
 	config.inserter_help_given = config.inserter_help_given or 0
+	config.biter_appology = config.biter_apology or 0
 	config.botmode = config.botmode or "normal"
 	global.chestTypes = {}
 	global.chestTypes["container"] = true
@@ -86,7 +87,7 @@ end
 
 -- Add chests to tracking list
 function assemblybots.entityBuilt(event, entity)
-game.print("Built " .. entity.name .. " of type " .. entity.type)
+--game.print("Built " .. entity.name .. " of type " .. entity.type)
 	local config = global.config[entity.force.name]
 	if global.chestTypes[entity.type] then
 		local chests = config.chests
@@ -242,6 +243,11 @@ function assemblybots.addBotsToChest(chest, botType)
 		if remaining > 0 then
 			if botType == "broken-assembly-bot" then
 				-- no space, spawn biter
+				local config = global.config[chest.force.name]
+				if config.biter_apology == 0 then
+					game.print("You might want to avoid letting chests fill up.  Imagine the biters are angry bots.  There will be custom graphics eventually")
+					config.biter_apology = 1
+				end
 				local surface = chest.surface
 				if not game.forces["botbiters"] then game.create_force("botbiters") end
 				local group = surface.create_unit_group{position=chest.position,force="botbiters"}
