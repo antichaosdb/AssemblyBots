@@ -294,36 +294,47 @@ end
 
 -- Loop through filter settings for the 3 types of bots
 function assemblybots.setFilter(event)
-  local player = game.players[event.player_index]
-  local entity = player.selected
-  if entity and entity.name == "filter-inserter" and player.can_reach_entity(entity) then
-    local filter1 = entity.get_filter(1)
-	local filter2 = entity.get_filter(2)
-	local filter3 = entity.get_filter(3)
-	if not filter1 and not filter2 and not filter3 then
-		entity.set_filter(1, "assembly-bot")
-		entity.set_filter(2, "used-assembly-bot")
-		entity.set_filter(3, "broken-assembly-bot")
-	elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
-		entity.set_filter(3, nil)
-	elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and not filter3 then
-		entity.set_filter(2, nil)
-	elseif filter1 == "assembly-bot" and not filter2 and not filter3 then
-		entity.set_filter(1, nil)
-		entity.set_filter(2, "used-assembly-bot")
-	elseif not filter1 and filter2 == "used-assembly-bot" and not filter3 then		
-		entity.set_filter(2, nil)
-		entity.set_filter(3, "broken-assembly-bot")
-	elseif not filter1 and not filter2 and filter3 == "broken-assembly-bot" then
-		entity.set_filter(1, "assembly-bot")
-	elseif filter1 == "assembly-bot" and not filter2 and filter3 == "broken-assembly-bot" then
-		entity.set_filter(1, nil)
-		entity.set_filter(2, "used-assembly-bot")
-	elseif not filter1 and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
-		entity.set_filter(2, nil)
-		entity.set_filter(3, nil)
+	local player = game.players[event.player_index]
+	local entity = player.selected
+	if entity and player.can_reach_entity(entity) and entity.name == "filter-inserter" then
+		local filter1 = entity.get_filter(1)
+		local filter2 = entity.get_filter(2)
+		local filter3 = entity.get_filter(3)
+		if not filter1 and not filter2 and not filter3 then
+			entity.set_filter(1, "assembly-bot")
+			entity.set_filter(2, "used-assembly-bot")
+			entity.set_filter(3, "broken-assembly-bot")
+		elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
+			entity.set_filter(3, nil)
+		elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and not filter3 then
+			entity.set_filter(2, nil)
+		elseif filter1 == "assembly-bot" and not filter2 and not filter3 then
+			entity.set_filter(1, nil)
+			entity.set_filter(2, "used-assembly-bot")
+		elseif not filter1 and filter2 == "used-assembly-bot" and not filter3 then		
+			entity.set_filter(2, nil)
+			entity.set_filter(3, "broken-assembly-bot")
+		elseif not filter1 and not filter2 and filter3 == "broken-assembly-bot" then
+			entity.set_filter(1, "assembly-bot")
+		elseif filter1 == "assembly-bot" and not filter2 and filter3 == "broken-assembly-bot" then
+			entity.set_filter(1, nil)
+			entity.set_filter(2, "used-assembly-bot")
+		elseif not filter1 and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
+			entity.set_filter(2, nil)
+			entity.set_filter(3, nil)
+		end
+	elseif entity and player.can_reach_entity(entity) and entity.name == "stack-filter-inserter" then
+		local filter1 = entity.get_filter(1)
+		if not filter1 then
+			entity.set_filter(1, "assembly-bot")
+		elseif filter1 == "assembly-bot" then
+			entity.set_filter(1, "used-assembly-bot")
+		elseif filter1 == "used-assembly-bot" then
+			entity.set_filter(1, "broken-assembly-bot")
+		elseif filter1 == "broken-assembly-bot" then
+			entity.set_filter(1, nil)
+		end
 	end
-  end
 end
 
 function assemblybots.onTick(event)
