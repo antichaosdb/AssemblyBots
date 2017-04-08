@@ -10,7 +10,8 @@ To succeed at this you'll have to learn to love filter inserters.  I know settin
 
 Current version
 ---------------
-0.1  Released 8 April 2017  Mod Portal Link
+0.1  Released 8 April 2017  
+Mod Portal Link  
 For contributions and bugs use https://github.com/antichaosdb/AssemblyBots
 
 SPOILERS!
@@ -19,13 +20,13 @@ There are features of this mod that are more "fun" if you don't know about them 
 
 Known Issues
 ------------
-This won't work with large, recipe changing mods like Bobs or Angels.  It could probably be made to, but that's a whole extra level of crazy.  If there are things that break with non-game changing mods, let me know.  DON'T use an auto-research mod with this.
-My homemade tech icons are particularly rubbish.  
-It's meant to be awkward, but the balance may be way off.  config.lua has a load of values that control various balance factors.  Most of these require starting a new map.  
-Part of the "fun" of this mod is trying find ways around the problems it introduces.  Some of the allowed workarounds are intentional, others are things I can't control yet, but should be able to in .15 
+- This won't work with large, recipe changing mods like Bobs or Angels.  It could probably be made to, but that's a whole extra level of crazy.  If there are things that break with non-game changing mods, let me know.  DON'T use an auto-research mod with this.
+- My homemade tech icons are particularly rubbish.  Any assistance would be appreciated.
+- It's meant to be awkward, but the balance may be way off.  config.lua has a load of values that control various balance factors.  Most of these require starting a new map.  
+- Part of the "fun" of this mod is trying find ways around the problems it introduces.  Some of the allowed workarounds are intentional, others are things I can't control yet, but should be able to in .15 
 
-Credits (Mods I studies while working on this)
+Credits (Mods I studied while working on this)
 -------
-Angels Refining
-Advanced Logistics System
-Picker Extended
+- Angels Refining
+- Advanced Logistics System
+- Picker Extended
