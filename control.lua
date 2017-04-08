@@ -180,7 +180,7 @@ function assemblybots.setRechargeRecipies(force, research)
 			force.technologies[tech.."-"..level].enabled = false
 			force.technologies[tech.."-"..(level+1)].enabled = true
 			local oldrecipename = "assembly-bot-" .. string.sub(tech, 18)
-			game.print("changing " .. oldrecipename.." to "..recipename)
+			--game.print("changing " .. oldrecipename.." to "..recipename)
 			toChange[oldrecipename] = recipename
 		end
 	end
