@@ -44,6 +44,7 @@ function assemblybots.init(force)
 	config.inserter_help_given = config.inserter_help_given or 0
 	config.biter_appology = config.biter_apology or 0
 	config.botmode = config.botmode or "normal"
+	config.rechargemode = config.rechargemode or "assemblybots-bot-recharge1"
 	global.chestTypes = {}
 	global.chestTypes["container"] = true
 	global.chestTypes["smart-container"] = true
@@ -172,10 +173,12 @@ function assemblybots.setRechargeRecipies(force, research)
 	local techbase = string.sub(research, 1, string.len(research)-2)
 	local recipename = "assembly-bot-" .. string.sub(techbase, 18)
 	local toChange = {}
+	local config = global.config[force.name]
+	config.rechargemode = techbase
 	local techs = {"assemblybots-bot-recharge1", "assemblybots-bot-recharge2", "assemblybots-bot-recharge3"}
 	for _, tech in pairs(techs) do
 		local techmatch = string.gsub(tech,"%-", "%%-")
-		game.print(techbase.. "  " .. techmatch)
+		--game.print(techbase.. "  " .. techmatch)
 		if not string.match(techbase,techmatch)  then
 			force.technologies[tech.."-"..level].enabled = false
 			force.technologies[tech.."-"..(level+1)].enabled = true
@@ -224,26 +227,24 @@ function assemblybots.addBotsToChest(chest, botType)
 	if bots == 0 then return end
 	local botStacks = math.floor(bots / 10)
 	local newBots = 0
+	local chestReplicationFactor = 0.1
+	if botType == "used-assembly-bot" then chestReplicationFactor = 0.05 end
 	for s = 1, botStacks, 1 do
 		local r = math.random()
-		if r < 0.1 then
+		if r < chestReplicationFactor then
 			newBots = newBots + 1
 		end
 	end
 	--game.print("Found " .. bots .." " .. botType.. " in " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}) .. ".  Creating " .. newBots)
+	local iron = chest.get_item_count("iron-plate")
+	local config = global.config[chest.force.name]
 	if newBots > 0 then
 		local inserted = 0
 		local inventory = chest.get_inventory(defines.inventory.chest)
 		if chest.type == "car" then inventory = chest.get_inventory(defines.inventory.car_trunk) end
-		if inventory.can_insert({name=botType, count=newBots}) then
-			inserted = inventory.insert({name=botType, count=newBots})
-		end
-		local remaining = newBots - inserted
-		--game.print("Put " .. inserted .. " " .. botType.. " " .. remaining .. " overflow")
-		if remaining > 0 then
-			if botType == "broken-assembly-bot" then
+		if botType == "broken-assembly-bot" then
+			if not inventory.can_insert({name=botType, count=newBots}) then
 				-- no space, spawn biter
-				local config = global.config[chest.force.name]
 				if config.biter_apology == 0 then
 					game.print("You might want to avoid letting chests fill up.  Imagine the biters are angry bots.  There will be custom graphics eventually")
 					config.biter_apology = 1
@@ -259,14 +260,33 @@ function assemblybots.addBotsToChest(chest, botType)
 					end
 				end
 				group.set_command({type=defines.command.attack_area, destination=chest.position, radius=32})
-			elseif botType == "used-assembly-bot" then
-				-- no space, remove a stack of used bots and add broken bots
-				inventory.remove({name=botType, count=10})
-				inventory.insert({name="broken-assembly-bot", count=remaining})	
-			elseif botType == "assembly-bot" then
-				-- no space, remove a stack of bots and add used bots
-				inventory.remove({name=botType, count=10})
-				inventory.insert({name="used-assembly-bot", count=remaining})	
+			end
+		elseif botType == "used-assembly-bot" then
+			-- allow passive recharging
+			if iron > 0 and config.rechargemode == "assemblybots-bot-recharge2" then
+				local botsToRecharge = math.min(iron, newBots)
+				inventory.remove({name=botType, count=botsToRecharge})
+				inventory.insert({name="assembly-bot", count=botsToRecharge})
+				newBots = newBots - botsToRecharge
+			end
+			if newBots > 0 then
+				-- remove used bots and add broken bots
+				inventory.remove({name=botType, count=newBots})
+				inventory.insert({name="broken-assembly-bot", count=newBots})	
+			end
+		elseif botType == "assembly-bot" then
+			local copper = chest.get_item_count("copper-plate")
+			local assm = chest.get_item_count("assembling-machine-1")
+			if iron > 1 and copper> 2 and assm > 0 then
+				local circuits = math.min(math.floor(iron/2), math.floor(copper/3), newBots)
+				inventory.remove({name="iron-plate", count=(circuits*2)})
+				inventory.remove({name="copper-plate", count=(circuits*3)})
+				inventory.insert({name="electronic-circuit", count=circuits})
+				newBots = newBots - circuits
+			end
+			if newBots > 0 then 
+				-- add used bots
+				inventory.insert({name="used-assembly-bot", count=newBots})	
 			end
 		end
 	end
