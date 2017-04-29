@@ -1,13 +1,13 @@
 {
   "name": "assemblybots",
-  "version": "0.1.0",
-  "factorio_version": "0.14",
+  "version": "0.2.0",
+  "factorio_version": "0.15",
   "title": "Assembly Bots",
   "author": "Antichaos",
   "contact": "",
   "homepage": "https://github.com/antichaosdb/assemblybots",
-  "description": "Assembly machines needs a bot for each craft.  The bots can't be crafted themselves, but they do occasionally replicate.",
+  "description": "Assembly machines needs a bot for each craft.  The bots can't be crafted themselves, but they do occasionally replicate.  However, they can't be destroyed, or even stored - at least not safely.",
   "dependencies": [
-	"base >= 0.14.0"
+	"base >= 0.15.0"
 	]
 }

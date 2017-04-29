@@ -22,8 +22,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -50,8 +49,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -78,8 +76,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -99,8 +96,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -116,8 +112,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -137,8 +132,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -148,7 +142,7 @@ data:extend(
     type = "technology",
     name = "assemblybots-bot-normal-1",
     icon = "__assemblybots__/graphics/icons/assembly-bot.png",
-	icon_size = 128,
+	icon_size = 32,
 	enabled = false,
     prerequisites =
     {
@@ -159,8 +153,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -180,8 +173,7 @@ data:extend(
       count = 50,
       ingredients = 
       {
-        {"science-pack-1", 1},
-		{"science-pack-2", 1}
+        {"science-pack-1", 1}
       },
       time = assemblybots.config.techtime
     },
@@ -191,7 +183,7 @@ data:extend(
     type = "technology",
     name = "assemblybots-bot-repair",
     icon = "__assemblybots__/graphics/icons/broken-assembly-bot.png",
-	icon_size = 128,
+	icon_size = 32,
 	researched = true,
     prerequisites =
     {

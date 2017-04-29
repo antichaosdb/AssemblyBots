@@ -5,6 +5,9 @@
 - Doesn't work with other large, recipe changing mods eg, Bobs/Angels.  
 - No penalty for dropping items on ground.  Will be added after 0.15 is released
 
+---0.2.0
+- Updated for 0.15
+
 ---0.1.0
 - First release
 - All non-smelting recipies require assembly bots

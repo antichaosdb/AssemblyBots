@@ -2,7 +2,7 @@
 
 This mod is for those looking for a new layout challenge, without having to learn loads of new recipes.  It also does some things with technology that I hope are rather innovative.  Plus, surprises!
 
-It makes every (non-smelting) recipe require an assembly bot.  This depletes the bot, which then has to be recharged.  Assemblybots cannot be crafted directly, but with every craft they have a chance to replicate.  More bots is better, right?  Assemblers all have an extra input slot to accommodate the new recipes.
+It makes every (non-smelting) recipe require an assembly bot.  This depletes the bot, which then has to be recharged.  Assemblybots cannot be crafted directly, but with every craft they have a chance to replicate.  More bots is better, right?  However, they can't be destroyed, or even stored - at least not safely.  Assemblers all have an extra input slot to accommodate the new recipes.
 
 There are technology options which control how the bots are used and how they are recharged.  These technologies are mutually exclusive.  When you research one, the others are replaced with more expensive versions.  So you can switch between them, but the costs increase, and there is a limit to the number of times you can switch.  Also, these technologies change every recipe and automatically update the recipe in every assembling machine.
 
