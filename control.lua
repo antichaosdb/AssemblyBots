@@ -2,9 +2,38 @@ if not assemblybots then assemblybots = {} end
 if not assemblybots.config then assemblybots.config = {} end
 
 require("config")
+require("chest-recipes")
 
 function assemblybots.chestKey(chest)
 	return string.gsub(chest.position.x.."A"..chest.position.y, "-", "_")
+end
+
+function assemblybots.checkChestRecipes(force)
+	for key, recipe in pairs(assemblybots.chestRecipies) do
+		if not recipe.enabled then
+			local keyRecipe = force.recipes[key]
+			local resultRecipe = force.recipes[recipe.result]
+			if keyRecipe and keyRecipe.enabled and resultRecipe and resultRecipe.enabled then
+				recipe.enabled = true
+			end
+		end
+	end
+end
+
+function assemblybots.spillBotStack(config, surface, position, botType, count)
+	local botStacks = math.floor(count / 10)
+	local bots_on_ground = config.bots_on_ground
+	for s = 1, botStacks, 1 do 
+		local pos = surface.find_non_colliding_position("item-on-ground", position,8, 1)
+		local stack = surface.create_entity{name="item-on-ground",position=pos,stack={name=botType, count=10}}
+		table.insert(bots_on_ground, {entity=stack,closest_chest=nil,steps=0})
+	end
+	local remaining  = count - (10 * botStacks)
+	if remaining > 0 then
+		local pos = surface.find_non_colliding_position("item-on-ground", position,8, 1)			
+		local stack = surface.create_entity{name="item-on-ground",position=pos,stack={name=botType, count=10}}
+		table.insert(bots_on_ground, {entity=stack,closest_chest=nil,steps=0})
+	end
 end
 
 function assemblybots.findChests(force)
@@ -27,7 +56,63 @@ function assemblybots.findChests(force)
     global.config[force.name].chests = chests
 end
 
+function assemblybots.findClosestChest(chests, item)
+	local closestChest = nil
+	local closestDistance = 1000000
+	local botStack = item.entity
+	for i, chest in pairs(chests) do
+		if math.abs(chest.position.x - botStack.position.x) < assemblybots.config.dropped_item_step_size and math.abs(chest.position.y - botStack.position.y) < assemblybots.config.dropped_item_step_size then
+			-- try to put stack in chest
+			local inventory = chest.get_inventory(defines.inventory.chest)
+			if chest.type == "car" then inventory = chest.get_inventory(defines.inventory.car_trunk) end
+			if inventory.can_insert({name=botStack.stack.name, count=botCount}) then
+				inventory.insert(botStack.stack)
+				botStack.destroy()
+				return
+			end
+		else
+			local distance = math.abs(chest.position.x - botStack.position.x) + math.abs(chest.position.y - botStack.position.y)
+			if distance < closestDistance then
+				closestDistance = distance
+				closestChest = chest
+			end
+		end
+	end
+	if not closestChest then
+		-- if no valid chests, create one
+		local newpos = surface.find_non_colliding_position("iron-chest", botStack.position,5, 1)
+		closestChest = surface.create_entity{name="iron-chest",position=newpos,force=botStack.force}
+		local key = assemblybots.chestKey(closestChest)
+		chests[key] = closestChest
+	end
+	item.closest_chest = closestChest
+	item.steps = 0
+end
+							
+function assemblybots.findBotsOnGround(force, chests)
+    local bots_on_ground = {}
+    local surface = game.surfaces[1]
+    for coord in surface.get_chunks() do
+        local X,Y = coord.x, coord.y
+        if surface.is_chunk_generated{X,Y} then
+            local area = {{X*32, Y*32}, {X*32 + 32, Y*32 + 32}}
+			for _,entity in pairs(surface.find_entities_filtered{area=area, name="item-on-ground", force=force}) do
+				if entity.stack.name == "assembly-bot" or entity.stack.name == "used-assembly-bot" or entity.stack.name == "broken-assembly-bot" then
+					local item = {entity=entity,closest_chest=nil,steps=0}
+					assemblybots.findClosestChest(chests, item)
+					if item.entity and item.entity.valid then
+						table.insert(bots_on_ground, item)
+					end
+				end
+			end
+		end
+	end
+end
+
+local intiDone = false
+
 function assemblybots.init(force)
+	if initDone then return end
 	if not force or force == game.forces.enemy or force == "biterbots" then return end
 	global.config = global.config or {}
 	local forcename = force.name
@@ -35,7 +120,7 @@ function assemblybots.init(force)
 		forcename = force 
 		force = game.forces[forcename]
 	end
-	if global.config[forcename] then return end
+	assemblybots.checkChestRecipes(force)
 	--game.print("init")
 	global.config[forcename] = global.config[forcename] or {}
 	local config = global.config[forcename]
@@ -51,22 +136,39 @@ function assemblybots.init(force)
 	global.chestTypes["logistic-container"] = true
 	global.chestTypes["cargo-wagon"] = true
 	global.chestTypes["car"] = true
-	if not config.chests then 
-		config.chests = {}
-		assemblybots.findChests(force)
+	config.chests = {}
+	assemblybots.findChests(force)
+	config.bots_on_ground = {}
+	assemblybots.findBotsOnGround(force)
+	
+	--disable normal mode recipes after an update that has reset recipies
+	local mode = config.botmode
+	if mode ~= "normal" and force.recipes["iron-gear-wheel"].enabled then
+		local toChange = {}
+		for k, recipe in pairs(force.recipes) do
+			if recipe.category ~= "smelting" and not string.match(recipe.name,"assembly%-bot") and not string.match(recipe.name,"%-"..mode) and recipe.enabled then
+				local new_recipename= recipe.name.."-"..mode
+				toChange[recipe.name] = new_recipename
+			end
+		end
+		assemblybots.changeRecipes(force, toChange)
 	end
+	
+	initDone = true
 end
 
 function assemblybots.entityDied(event, entity)
 	if entity.force == game.forces.enemy then return end
 	local config = global.config[entity.force.name]
+	if not config then return end
 	local bots = entity.get_item_count("assembly-bot")
 	local ubots = entity.get_item_count("used-assembly-bot")
 	local bbots = entity.get_item_count("broken-assembly-bot")
 	config.bots_spilled = config.bots_spilled + bots + ubots + bbots
-	if bots > 0 then entity.surface.spill_item_stack(entity.position, {name="assembly-bot", count=bots}, true) end
-	if ubots > 0 then entity.surface.spill_item_stack(entity.position, {name="used-assembly-bot", count=ubots}, true) end
-	if bbots > 0 then entity.surface.spill_item_stack(entity.position, {name="broken-assembly-bot", count=bbots}, true) end
+	local surface = game.surfaces[1]
+	if bots > 0 then assemblybots.spillBotStack(config, surface, entity.position, "assembly-bot", bots) end
+	if ubots > 0 then assemblybots.spillBotStack(config, surface, entity.position, "used-assembly-bot", ubots) end
+	if bbots > 0 then assemblybots.spillBotStack(config, surface, entity.position, "broken-assembly-bot", bbots) end
 
 	-- if config.bots_spilled > 1000 and config.spill_warning_level <= 2 then
 		-- game.print("Seriously, that's a bad idea.  They notice.")
@@ -208,6 +310,9 @@ function assemblybots.onResearchFinished(event)
 	elseif string.match(research.name,"assemblybots%-bot%-suppression.*") then	
 		assemblybots.setModeRecipies(force, research.name)
 	else
+		-- see if we need to enable any chest recipes
+		assemblybots.checkChestRecipes(force)
+	
 		-- Unlock correct version of newly unlocked recipes
 		local botmode = global.config[force.name].botmode
 		for ek = #research.effects, 1, -1 do
@@ -222,28 +327,52 @@ function assemblybots.onResearchFinished(event)
 	end
 end
 
-function assemblybots.addBotsToChest(chest, botType)
-	local bots = chest.get_item_count(botType)
-	if bots == 0 then return end
+	
+function getNewBots(bots, repfactor)
 	local botStacks = math.floor(bots / 10)
 	local newBots = 0
-	local chestReplicationFactor = 0.1
-	if botType == "used-assembly-bot" then chestReplicationFactor = 0.05 end
+	repfactor = repfactor * 10
 	for s = 1, botStacks, 1 do
-		local r = math.random()
-		if r < chestReplicationFactor then
+		local r = math.random(10)
+		if r <= repfactor then
 			newBots = newBots + 1
 		end
 	end
+	return newBots
+end
+
+function assemblybots.addBots(inventory, addType, newBots)
+	local inserted = inventory.insert({name=addType, count=newBots})
+	local remaining = newBots - inserted
+	if remaining > 0 then
+		local bins = inventory.insert({name="broken-assembly-bot", count=remaining})
+		if bins < remaining then
+			-- remove stack of used-bots and add broken bots
+			local remo = inventory.remove({name=addType, count=10})
+			inventory.insert({name="broken-assembly-bot", count=remaining - bins})
+		end
+	end	
+end
+				
+function assemblybots.processChest(chest)
+	local inventory = chest.get_inventory(defines.inventory.chest)
+	if chest.type == "car" then inventory = chest.get_inventory(defines.inventory.car_trunk) end
+	local counts = inventory.get_contents()
+	local assmBots = counts["assembly-bot"]
+	local usedBots = counts["used-assembly-bot"]
+	local brokenBots = counts["broken-assembly-bot"]
+	-- game.print("Checking " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}))
+	if not assmBots and not usedBots and not brokenBots then return end
+
 	--game.print("Found " .. bots .." " .. botType.. " in " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}) .. ".  Creating " .. newBots)
-	local iron = chest.get_item_count("iron-plate")
 	local config = global.config[chest.force.name]
-	if newBots > 0 then
-		local inserted = 0
-		local inventory = chest.get_inventory(defines.inventory.chest)
-		if chest.type == "car" then inventory = chest.get_inventory(defines.inventory.car_trunk) end
-		if botType == "broken-assembly-bot" then
-			if not inventory.can_insert({name=botType, count=newBots}) then
+	-- broken bots.  Create bots but make biters if chest is full
+	if brokenBots then
+		local newBots = getNewBots(brokenBots,0.1)
+		if newBots > 0 then
+			local inserted = inventory.insert({name="assembly-bot", count=newBots})
+			if inserted < newBots then
+				newBots = newBots - inserted
 				-- no space, spawn biter
 				if config.biter_apology == 0 then
 					game.print("You might want to avoid letting chests fill up.  Imagine the biters are angry bots.  There will be custom graphics eventually")
@@ -251,42 +380,116 @@ function assemblybots.addBotsToChest(chest, botType)
 				end
 				local surface = chest.surface
 				if not game.forces["botbiters"] then game.create_force("botbiters") end
-				local group = surface.create_unit_group{position=chest.position,force="botbiters"}
-				for e = 1, remaining, 1 do
+				local newForce = "botbiters"
+				-- feed them fish to make them spawn friendly
+				if counts["raw-fish"] and counts["raw-fish"] > newBots then newForce = chest.force.name end
+				local group = surface.create_unit_group{position=chest.position,force=newForce}
+				for e = 1, newBots, 1 do
 					local pos = surface.find_non_colliding_position("small-biter", chest.position,8, 1)
 					if pos then				
-						local biter = surface.create_entity{name="small-biter", position=pos,force="botbiters"}
+						local biter = surface.create_entity{name="small-biter", position=pos,force=newForce}
 						group.add_member(biter)
 					end
 				end
-				group.set_command({type=defines.command.attack_area, destination=chest.position, radius=32})
+				if newForce == "botbiters" then
+					group.set_command({type=defines.command.attack_area, destination=chest.position, radius=32})
+				else
+					-- not sure what to command friendlies
+				end
 			end
-		elseif botType == "used-assembly-bot" then
+		end
+	end
+	-- used bots.  Passive recharge, otherwise replicate.  Break if chest full
+	if usedBots then
+		local newBots = getNewBots(usedBots,0.1)
+		if newBots > 0 then
+			local iron = counts["iron-plate"]
+			local circuits = counts["electronic-circuit"]
 			-- allow passive recharging
-			if iron > 0 and config.rechargemode == "assemblybots-bot-recharge2" then
+			if iron and config.rechargemode == "assemblybots-bot-recharge2" then
 				local botsToRecharge = math.min(iron, newBots)
-				inventory.remove({name=botType, count=botsToRecharge})
-				inventory.insert({name="assembly-bot", count=botsToRecharge})
-				newBots = newBots - botsToRecharge
+				inventory.remove({name="iron-plate", count=botsToRecharge})
+				inventory.remove({name="used-assembly-bot", count=botsToRecharge*2})
+				inventory.insert({name="assembly-bot", count=botsToRecharge*2})
+				newBots = newBots - (botsToRecharge*2)
+			elseif circuits and config.rechargemode == "assemblybots-bot-recharge3" then
+				local botsToRecharge = math.min(circuits, newBots)
+				inventory.remove({name="electronic-circuit", count=botsToRecharge})
+				inventory.remove({name="used-assembly-bot", count=botsToRecharge*8})
+				inventory.insert({name="assembly-bot", count=botsToRecharge*8})
+				newBots = newBots - (botsToRecharge*8)
 			end
 			if newBots > 0 then
-				-- remove used bots and add broken bots
-				inventory.remove({name=botType, count=newBots})
-				inventory.insert({name="broken-assembly-bot", count=newBots})	
+				assemblybots.addBots(inventory, "used-assembly-bot", newBots)		
 			end
-		elseif botType == "assembly-bot" then
-			local copper = chest.get_item_count("copper-plate")
-			local assm = chest.get_item_count("assembling-machine-1")
-			if iron > 1 and copper> 2 and assm > 0 then
-				local circuits = math.min(math.floor(iron/2), math.floor(copper/3), newBots)
-				inventory.remove({name="iron-plate", count=(circuits*2)})
-				inventory.remove({name="copper-plate", count=(circuits*3)})
-				inventory.insert({name="electronic-circuit", count=circuits})
-				newBots = newBots - circuits
+		end
+	end
+	-- assembly bots.  Passive crafting, or produce used bots
+	if assmBots then
+		local newBots = getNewBots(assmBots,0.1)
+		if newBots > 0 then
+			if true then --chest.force.technologies["assemblybots-bot-management"].researched then
+				local toCraft = {}
+				local totalOut = 0
+				for key, recipe in pairs(assemblybots.chestRecipies) do
+					-- check for key
+					if recipe.enabled and counts[key] then
+						local output = newBots
+						-- check for ingredients
+						for _, ingredient in pairs(recipe.ingredients) do
+							if counts[ingredient.name] and counts[ingredient.name] >= ingredient.amount then
+								output = math.min(output, math.floor(counts[ingredient.name]/ingredient.amount))
+							else
+								output = 0
+							end
+						end
+						-- add to list of things we can craft
+						if output > 0 then toCraft[key] = output end
+						totalOut = totalOut + output
+					end
+				end
+				for key, output in pairs(toCraft) do
+					if newBots > 0 then
+						local recipe = assemblybots.chestRecipies[key]
+						-- rebalance output
+						local newItems = output
+						if totalOut > newBots then newItems = math.floor((output * newBots) / totalOut) end
+						if newItems == 0 then newItems = 1 end
+							
+						--game.print("passive crafting " .. newItems .. " " .. recipe.result)
+						for _, ingredient in pairs(recipe.ingredients) do
+							-- remove ingredients
+							inventory.remove({name=ingredient.name, count=(ingredient.amount*newItems)})
+						end
+						-- reduce health on key item
+						local keyStack = inventory.find_item_stack(key)
+						local usage = 1 / (recipe.uses * keyStack.count)
+						if keyStack.health <=usage then
+							keyStack.count = 0
+						else
+							keyStack.health = keyStack.health - usage
+						end
+						-- add result
+						local inserted = inventory.insert({name=recipe.result, count=recipe.amount*newItems})
+						local remaining = (recipe.amount*newItems) - inserted
+						if remaining > 0 then
+							local bins = inventory.insert({name="broken-assembly-bot", count=remaining})
+							if bins < remaining then
+								-- remove stack of bots and add broken bots
+								local remo = inventory.remove({name="assembly-bot", count=10})
+								inventory.insert({name="broken-assembly-bot", count=remaining - bins})
+							end
+						else					
+							--replace bots with used bots
+							inventory.remove({name="assembly-bot", count=newItems})
+							inventory.insert({name="used-assembly-bot", count=newItems})
+						end
+						newBots = newBots - newItems
+					end
+				end
 			end
-			if newBots > 0 then 
-				-- add used bots
-				inventory.insert({name="used-assembly-bot", count=newBots})	
+			if newBots > 0 then 			
+				assemblybots.addBots(inventory, "assembly-bot", newBots)
 			end
 		end
 	end
@@ -301,10 +504,9 @@ function assemblybots.checkChests()
 			if chests then
 				for key, chest in pairs(chests) do
 					if chest and chest.valid and chest.name ~= nil and type ~= nil then
-						--game.print("Checking " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}))
-						assemblybots.addBotsToChest(chest, "broken-assembly-bot")
-						assemblybots.addBotsToChest(chest, "used-assembly-bot")
-						assemblybots.addBotsToChest(chest, "assembly-bot")
+						assemblybots.processChest(chest)
+					else 
+						chests[key] = nil
 					end
 				end
 			end
@@ -316,43 +518,102 @@ end
 function assemblybots.setFilter(event)
 	local player = game.players[event.player_index]
 	local entity = player.selected
-	if entity and player.can_reach_entity(entity) and entity.name == "filter-inserter" then
-		local filter1 = entity.get_filter(1)
-		local filter2 = entity.get_filter(2)
-		local filter3 = entity.get_filter(3)
-		if not filter1 and not filter2 and not filter3 then
-			entity.set_filter(1, "assembly-bot")
-			entity.set_filter(2, "used-assembly-bot")
-			entity.set_filter(3, "broken-assembly-bot")
-		elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
-			entity.set_filter(3, nil)
-		elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and not filter3 then
-			entity.set_filter(2, nil)
-		elseif filter1 == "assembly-bot" and not filter2 and not filter3 then
-			entity.set_filter(1, nil)
-			entity.set_filter(2, "used-assembly-bot")
-		elseif not filter1 and filter2 == "used-assembly-bot" and not filter3 then		
-			entity.set_filter(2, nil)
-			entity.set_filter(3, "broken-assembly-bot")
-		elseif not filter1 and not filter2 and filter3 == "broken-assembly-bot" then
-			entity.set_filter(1, "assembly-bot")
-		elseif filter1 == "assembly-bot" and not filter2 and filter3 == "broken-assembly-bot" then
-			entity.set_filter(1, nil)
-			entity.set_filter(2, "used-assembly-bot")
-		elseif not filter1 and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
-			entity.set_filter(2, nil)
-			entity.set_filter(3, nil)
+	if entity and player.can_reach_entity(entity) and entity.filter_slot_count and (entity.type == "inserter" or entity.type == "loader") then
+		if entity.filter_slot_count > 1 then
+			local filter1 = entity.get_filter(1)
+			local filter2 = entity.get_filter(2)
+			local filter3 = entity.get_filter(3)
+			if not filter1 and not filter2 and not filter3 then
+				entity.set_filter(1, "assembly-bot")
+				entity.set_filter(2, "used-assembly-bot")
+				entity.set_filter(3, "broken-assembly-bot")
+			elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
+				entity.set_filter(3, nil)
+			elseif filter1 == "assembly-bot" and filter2 == "used-assembly-bot" and not filter3 then
+				entity.set_filter(2, nil)
+			elseif filter1 == "assembly-bot" and not filter2 and not filter3 then
+				entity.set_filter(1, nil)
+				entity.set_filter(2, "used-assembly-bot")
+			elseif not filter1 and filter2 == "used-assembly-bot" and not filter3 then		
+				entity.set_filter(2, nil)
+				entity.set_filter(3, "broken-assembly-bot")
+			elseif not filter1 and not filter2 and filter3 == "broken-assembly-bot" then
+				entity.set_filter(1, "assembly-bot")
+			elseif filter1 == "assembly-bot" and not filter2 and filter3 == "broken-assembly-bot" then
+				entity.set_filter(1, nil)
+				entity.set_filter(2, "used-assembly-bot")
+			elseif not filter1 and filter2 == "used-assembly-bot" and filter3 == "broken-assembly-bot" then
+				entity.set_filter(2, nil)
+				entity.set_filter(3, nil)
+			end
+		elseif entity.filter_slot_count == 1 then
+			local filter1 = entity.get_filter(1)
+			if not filter1 then
+				entity.set_filter(1, "assembly-bot")
+			elseif filter1 == "assembly-bot" then
+				entity.set_filter(1, "used-assembly-bot")
+			elseif filter1 == "used-assembly-bot" then
+				entity.set_filter(1, "broken-assembly-bot")
+			elseif filter1 == "broken-assembly-bot" then
+				entity.set_filter(1, nil)
+			end
 		end
-	elseif entity and player.can_reach_entity(entity) and entity.name == "stack-filter-inserter" then
-		local filter1 = entity.get_filter(1)
-		if not filter1 then
-			entity.set_filter(1, "assembly-bot")
-		elseif filter1 == "assembly-bot" then
-			entity.set_filter(1, "used-assembly-bot")
-		elseif filter1 == "used-assembly-bot" then
-			entity.set_filter(1, "broken-assembly-bot")
-		elseif filter1 == "broken-assembly-bot" then
-			entity.set_filter(1, nil)
+	end
+end
+
+function assemblybots.moveBotsOnGround()
+	local surface = game.surfaces[1]
+	for index, force in pairs(game.forces) do
+		if not force or force == game.forces.enemy or force == "biterbots" then return end
+		local config = global.config[force.name]
+		local bots_on_ground = config.bots_on_ground
+		if config then
+			local chests = config.chests
+			for idx, item in pairs(bots_on_ground) do
+				local botStack = item.entity
+				if botStack and botStack.valid and not item.closest_chest then 
+					assemblybots.findClosestChest(chests, item)
+				elseif botStack and botStack.valid and item.steps > 10 then
+					assemblybots.findClosestChest(chests, item)
+				end
+				if botStack and botStack.valid then
+					local botType = botStack.stack.name
+					local botCount = botStack.stack.count									
+					local closestChest = item.closest_chest
+					if closestChest then
+						if math.abs(closestChest.position.x - botStack.position.x) < assemblybots.config.dropped_item_step_size and math.abs(closestChest.position.y - botStack.position.y) < assemblybots.config.dropped_item_step_size then
+							-- try to put stack in chest
+							local inventory = closestChest.get_inventory(defines.inventory.chest)
+							if closestChest.type == "car" then inventory = closestChest.get_inventory(defines.inventory.car_trunk) end
+							if inventory.can_insert({name=botType, count=botCount}) then
+								inventory.insert(botStack.stack)
+								botStack.destroy()
+								table.remove(bots_on_ground,idx)
+							end
+						else
+							-- move closer to chest
+							local newX = botStack.position.x
+							if closestChest.position.x > botStack.position.x + assemblybots.config.dropped_item_step_size then 
+								newX = newX + assemblybots.config.dropped_item_step_size
+							elseif closestChest.position.x < botStack.position.x - assemblybots.config.dropped_item_step_size then 	
+								newX = newX - assemblybots.config.dropped_item_step_size
+							end
+							local newY = botStack.position.y
+							if closestChest.position.y > botStack.position.y + assemblybots.config.dropped_item_step_size then 
+								newY = newY + assemblybots.config.dropped_item_step_size
+							elseif closestChest.position.y < botStack.position.y - assemblybots.config.dropped_item_step_size then 	
+								newY = newY - assemblybots.config.dropped_item_step_size
+							end
+							local newpos = surface.find_non_colliding_position("item-on-ground", {newX,newY},assemblybots.config.dropped_item_search_area, 1)
+							item.steps = item.steps + 1
+							botStack.teleport(newpos)
+						end
+					end
+				else
+					-- botstack invalid
+					table.remove(bots_on_ground,idx)
+				end
+			end
 		end
 	end
 end
@@ -361,6 +622,17 @@ function assemblybots.onTick(event)
 	if event.tick % assemblybots.config.chest_replication_ticks == 0  then
 		assemblybots.checkChests()
 	end
+	if assemblybots.config.dropped_item_migration_ticks and event.tick % assemblybots.config.dropped_item_migration_ticks == 0 then
+		assemblybots.moveBotsOnGround()
+	end
+end
+
+function assemblybots.itemDropped(event, player_index, entity)
+	if entity.stack.name == "assembly-bot" or entity.stack.name == "used-assembly-bot" or entity.stack.name == "broken-assembly-bot" then
+		local bots_on_ground = global.config[game.players[player_index].force.name].bots_on_ground
+		table.insert(bots_on_ground, {entity=entity,closest_chest=nil,steps=0})
+	end
+	
 end
 
 -- Event Hooks
@@ -408,6 +680,10 @@ script.on_event(defines.events.on_preplayer_mined_item, function(event)
 end)
 script.on_event(defines.events.on_robot_pre_mined, function(event)
     assemblybots.entityMined(event, event.entity)
+end)
+
+script.on_event(defines.events.on_player_dropped_item, function(event)
+    assemblybots.itemDropped(event, event.player_index, event.entity)
 end)
 
 script.on_event(defines.events.on_research_finished, assemblybots.onResearchFinished)

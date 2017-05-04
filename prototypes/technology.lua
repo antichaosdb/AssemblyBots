@@ -208,5 +208,28 @@ data:extend(
     },
     order = "e-c-c-d"
   },
+  {
+    type = "technology",
+    name = "assemblybots-bot-management",
+    icon = "__assemblybots__/graphics/technology/assemblybots-bot-management.png",
+	icon_size = 128,
+	researched = true,
+    prerequisites =
+    {
+      "automation-2"
+    },
+    unit =
+    {
+      count = 50,
+      ingredients = 
+      {
+        {"science-pack-1", 1},
+		{"science-pack-2", 1},
+		{"science-pack-3", 1}
+      },
+      time = assemblybots.config.techtime
+    },
+    order = "e-c-c-d"
+  },
 }
 )

@@ -48,5 +48,18 @@ data:extend({
     },
     result = "assembly-bot",
 	result_count = 1
+  },
+    {
+    type = "recipe",
+    name = "long-filter-inserter",
+    enabled = "false",
+    ingredients = 
+    {
+      {"long-handed-inserter",1},
+	  {"electronic-circuit", 4}
+    },
+    result = "long-filter-inserter",
+	requester_paste_multiplier = 4,
+	result_count = 1
   }
 })

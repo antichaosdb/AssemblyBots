@@ -86,11 +86,9 @@ end
 for k, assm in pairs(data.raw["assembling-machine"]) do
 	assm.ingredient_count = assm.ingredient_count + 1
 end
--- data.raw["assembling-machine"]["assembling-machine-1"].ingredient_count = 3
--- data.raw["assembling-machine"]["assembling-machine-2"].ingredient_count = 4
--- data.raw["assembling-machine"]["assembling-machine-3"].ingredient_count = 7
--- data.raw["assembling-machine"]["chemical-plant"].ingredient_count = 5
--- data.raw["assembling-machine"]["oil-refinery"].ingredient_count = 5
+
+-- Unlock long-handed-filter-inserter with electronics
+table.insert(data.raw.technology["electronics"].effects, {type="unlock-recipe", recipe="long-filter-inserter"})
 
 -- Add Assembly bots as input and output to all recipies (except smelting)
 local toAdd = {}

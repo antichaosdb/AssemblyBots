@@ -2,12 +2,15 @@
 - Custom graphics for chest spawns
 
 --- KNOWN ISSUES
-- Doesn't work with other large, recipe changing mods eg, Bobs/Angels.  
-- No penalty for dropping items on ground.  Will be added after 0.15 is released
+- Doesn't work with other large, recipe changing mods eg, Bobs/Angels, but should be ok with loaders and warehouses
 
 ---0.2.0
 - Updated for 0.15
-- Tweaked chest replication slightly
+- Tweaked bot replication in chests slightly
+- Items dropped on ground now migrate to chests
+- Added passive recharge and passive crafting
+- Added long handed filter inserter
+- Surprises can be tamed
 
 ---0.1.0
 - First release
