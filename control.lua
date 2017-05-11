@@ -197,7 +197,7 @@ function assemblybots.entityBuilt(event, entity)
 		local key = assemblybots.chestKey(entity)
 		if not chests[key] then chests[key] = entity end
 	elseif entity.name == "filter-inserter" and config.inserter_help_given == 0 then
-		game.print("You can press B with the cursor over a filter insert to cyle through the bot filter options")
+		game.print("You can press N with the cursor over a filter insert to cyle through the bot filter options")
 		config.inserter_help_given = 1		
 	end
 end
@@ -368,7 +368,7 @@ function assemblybots.processChest(chest)
 	local config = global.config[chest.force.name]
 	-- broken bots.  Create bots but make biters if chest is full
 	if brokenBots then
-		local newBots = getNewBots(brokenBots,0.1)
+		local newBots = getNewBots(brokenBots,assemblybots.config.chest_replication_factor)
 		if newBots > 0 then
 			local inserted = inventory.insert({name="assembly-bot", count=newBots})
 			if inserted < newBots then
@@ -394,6 +394,7 @@ function assemblybots.processChest(chest)
 				if newForce == "botbiters" then
 					group.set_command({type=defines.command.attack_area, destination=chest.position, radius=32})
 				else
+					inventory.remove("raw-fish", newBots)
 					-- not sure what to command friendlies
 				end
 			end
@@ -401,7 +402,7 @@ function assemblybots.processChest(chest)
 	end
 	-- used bots.  Passive recharge, otherwise replicate.  Break if chest full
 	if usedBots then
-		local newBots = getNewBots(usedBots,0.1)
+		local newBots = getNewBots(usedBots,assemblybots.config.chest_replication_factor)
 		if newBots > 0 then
 			local iron = counts["iron-plate"]
 			local circuits = counts["electronic-circuit"]
@@ -426,9 +427,9 @@ function assemblybots.processChest(chest)
 	end
 	-- assembly bots.  Passive crafting, or produce used bots
 	if assmBots then
-		local newBots = getNewBots(assmBots,0.1)
+		local newBots = getNewBots(assmBots,assemblybots.config.chest_replication_factor)
 		if newBots > 0 then
-			if true then --chest.force.technologies["assemblybots-bot-management"].researched then
+			if chest.force.technologies["assemblybots-bot-management"].researched then
 				local toCraft = {}
 				local totalOut = 0
 				for key, recipe in pairs(assemblybots.chestRecipies) do
@@ -500,6 +501,7 @@ function assemblybots.checkChests()
 		assemblybots.init(force)
 		local config = global.config[force.name]
 		if config then
+		if config.botmode == "suppression" then return end
 		local chests = config.chests
 			if chests then
 				for key, chest in pairs(chests) do
@@ -589,6 +591,9 @@ function assemblybots.moveBotsOnGround()
 								inventory.insert(botStack.stack)
 								botStack.destroy()
 								table.remove(bots_on_ground,idx)
+							else
+								-- can't insert to nearest chest.  Force search for new chest
+								item.steps = 11
 							end
 						else
 							-- move closer to chest

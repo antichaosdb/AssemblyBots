@@ -71,11 +71,11 @@ function update_suppression_recipe(suppression_recipe)
 	suppression_recipe.enabled = false
 	local usedKey
 	for ok, output in pairs(suppression_recipe.results) do
-		if output.name == "assembly-bot" then 
+		if output.name == "used-assembly-bot" then 
 			output.probability = 1
-		elseif output.name ~= "used-assembly-bot" then
+		elseif output.name ~= "assembly-bot" then
 			output.probability = assemblybots.config.suppression_mode_factor
-		elseif output.name == "used-assembly-bot" then
+		elseif output.name == "assembly-bot" then
 			usedKey = ok
 		end
 	end
