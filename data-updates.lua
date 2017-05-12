@@ -36,9 +36,15 @@ function update_production_recipe(production_recipeVersion)
 	production_recipeVersion.enabled = false
 	for ok, output in pairs(production_recipeVersion.results) do
 		if output.name ~= "assembly-bot" and output.name ~= "used-assembly-bot"	then
-			output.amount_max = output.amount * 2
-			output.amount_min = output.amount
-			output.amount = nil
+			if output.amount then
+				output.amount_max = output.amount * 2
+				output.amount_min = output.amount
+				output.amount = nil
+			elseif output.amount_max then
+				output.amount_max = output.amount_max * 2
+			else
+				log("No amount or amount_max for output " .. output.name) 
+			end
 		end
 	end
 	for ik, input in pairs(production_recipeVersion.ingredients) do
