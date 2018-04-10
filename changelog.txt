@@ -4,6 +4,10 @@
 --- KNOWN ISSUES
 - Doesn't work with other large, recipe changing mods eg, Bobs/Angels, but should be ok with loaders and warehouses
 
+---0.2.2
+- Update for 0.16
+- Bot replication in chests is now much less punishing
+
 ---0.2.1
 - Hopefully fix a mod conflict with missing amount
 

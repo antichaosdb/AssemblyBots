@@ -366,13 +366,13 @@ function assemblybots.processChest(chest)
 
 	--game.print("Found " .. bots .." " .. botType.. " in " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}) .. ".  Creating " .. newBots)
 	local config = global.config[chest.force.name]
-	-- broken bots.  Create bots but make biters if chest is full
+	-- broken bots. Don't replicate but make biters if chest is full
 	if brokenBots then
 		local newBots = getNewBots(brokenBots,assemblybots.config.chest_replication_factor)
 		if newBots > 0 then
-			local inserted = inventory.insert({name="assembly-bot", count=newBots})
-			if inserted < newBots then
-				newBots = newBots - inserted
+			local hasSpace = inventory.can_insert({name="broken-assembly-bot", count=newBots})
+			if not hasSpace then
+				newBots = getNewBots(newBots * 10,assemblybots.config.chest_break_factor)
 				-- no space, spawn biter
 				if config.biter_apology == 0 then
 					game.print("You might want to avoid letting chests fill up.  Imagine the biters are angry bots.  There will be custom graphics eventually")
@@ -400,7 +400,7 @@ function assemblybots.processChest(chest)
 			end
 		end
 	end
-	-- used bots.  Passive recharge, otherwise replicate.  Break if chest full
+	-- used bots.  Passive recharge, otherwise break
 	if usedBots then
 		local newBots = getNewBots(usedBots,assemblybots.config.chest_replication_factor)
 		if newBots > 0 then
@@ -421,7 +421,21 @@ function assemblybots.processChest(chest)
 				newBots = newBots - (botsToRecharge*8)
 			end
 			if newBots > 0 then
-				assemblybots.addBots(inventory, "used-assembly-bot", newBots)		
+				-- break some fraction.  Use up good bots instead of breaking
+				local newBroken = getNewBots(newBots * 10, assemblybots.config.chest_break_factor)
+				if assmBots then
+					local discharged = math.min(assmBots, newBroken)
+					if discharged > 0 then
+						inventory.remove({name="assembly-bot", count=discharged})
+						assemblybots.addBots(inventory, "used-assembly-bot", discharged)
+						newBroken = newBroken - discharged
+					end
+				end
+				if newBroken > 0 then
+				--game.print("Breaking " .. newBroken .." in " .. chest.name .. " at " .. serpent.block(chest.position, {comment=false}) .. ".  Currently " .. usedBots)
+					inventory.remove({name="used-assembly-bot", count=newBroken})
+					assemblybots.addBots(inventory, "broken-assembly-bot", newBroken)					
+				end				
 			end
 		end
 	end
@@ -490,7 +504,7 @@ function assemblybots.processChest(chest)
 				end
 			end
 			if newBots > 0 then 			
-				assemblybots.addBots(inventory, "assembly-bot", newBots)
+				assemblybots.addBots(inventory, "used-assembly-bot", newBots)
 			end
 		end
 	end
@@ -680,7 +694,7 @@ script.on_event(defines.events.on_robot_built_entity, function(event)
     assemblybots.entityBuilt(event, event.created_entity)
 end)
 
-script.on_event(defines.events.on_preplayer_mined_item, function(event)
+script.on_event(defines.events.on_pre_player_mined_item, function(event)
     assemblybots.entityMined(event, event.entity)
 end)
 script.on_event(defines.events.on_robot_pre_mined, function(event)

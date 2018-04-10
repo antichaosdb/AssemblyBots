@@ -34,6 +34,7 @@ data:extend(
     type = "item",
     name = "long-filter-inserter",
     icon = "__assemblybots__/graphics/icons/long-filter-inserter.png",
+	icon_size = 32,
     flags = {"goes-to-quickbar"},
     subgroup = "inserter",
     order = "e[filter-inserter]",

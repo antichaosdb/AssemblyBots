@@ -5,6 +5,9 @@ assemblybots.config.chest_replication_ticks = 300
 -- probability of a stack of bots in a chest creating a new bot
 assemblybots.config.chest_replication_factor = 0.2
 
+-- probability of a used bots in a chest creating a broken bot
+assemblybots.config.chest_break_factor = 0.1
+
 -- How often dropped or spilled bots are moved towards a new chest. nil to disable
 assemblybots.config.dropped_item_migration_ticks = 60
 
